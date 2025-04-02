@@ -53,27 +53,51 @@ public abstract class AbstractOrder implements Orderable, Serializable {
     @Override
     public String serialize() {
         StringBuilder sb = new StringBuilder();
-        sb.append(id).append(",").append(customer.serialize()).append(",").append(status).append(",").append(orderDate).append(",");
+        sb.append(id).append(",")
+          .append(customer.serialize()).append(",")
+          .append(status).append(",")
+          .append(orderDate);
+        
         for (AbstractProduct product : products) {
-            sb.append(product.serialize()).append(";");
+            sb.append(",").append(product.serialize());
         }
         return sb.toString();
     }
 
     @Override
     public void deserialize(String data) {
-        String[] parts = data.split(",", 4);
-        this.id = parts[0];
-        this.customer = new Customer("", "").deserialize(parts[1]);
-        this.status = OrderStatus.valueOf(parts[2]);
-        this.orderDate = LocalDate.parse(parts[3]);
-        String[] productData = parts[4].split(";");
-        for (String pd : productData) {
-            if (!pd.isEmpty()) {
-                AbstractProduct product = new Product("", "", 0, ProductCategory.ELECTRONICS);
-                product.deserialize(pd);
+        try {
+            String[] parts = data.split(",");
+            int currentIndex = 0;
+            
+            // Основные данные заказа
+            this.id = parts[currentIndex++];
+            
+            // Данные покупателя
+            AbstractCustomer customer = new Customer(
+                parts[currentIndex++],  // id
+                parts[currentIndex++],  // name
+                parts[currentIndex++]   // email
+            );
+            this.customer = customer;
+            
+            // Статус и дата
+            this.status = OrderStatus.valueOf(parts[currentIndex++]);
+            this.orderDate = LocalDate.parse(parts[currentIndex++]);
+            
+            // Обрабатываем продукты
+            while (currentIndex + 3 < parts.length) {
+                AbstractProduct product = new Product(
+                    parts[currentIndex++],     // id
+                    parts[currentIndex++],     // name
+                    Double.parseDouble(parts[currentIndex++]), // price
+                    ProductCategory.valueOf(parts[currentIndex++]) // category
+                );
                 addProduct(product);
             }
+        } catch (Exception e) {
+            System.err.println("Error deserializing order: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

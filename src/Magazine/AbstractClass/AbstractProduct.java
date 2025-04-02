@@ -34,7 +34,7 @@ public abstract class AbstractProduct implements Identifiable, Purchasable, Seri
 
     @Override
     public String serialize() {
-        return id + "," + name + "," + price + "," + category;
+        return String.format("%s,%s,%s,%s", id, name, String.valueOf(price), category);
     }
 
     @Override
